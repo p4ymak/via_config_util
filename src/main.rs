@@ -9,40 +9,50 @@ use std::{
 };
 use structs::{print_layer, Config};
 #[derive(Parser, Debug)]
-#[clap(about = "Tool to check and mirror keymaps in VIA config for Split Keyboard.")]
+#[clap(
+    about = "Utility to check, adjust and mirror keymaps in VIA config JSON for Split Keyboards."
+)]
 struct Args {
-    /// Input: Path to VIA JSON config.
+    /// Path to existing VIA JSON config.
     #[clap(short = 'i', long = "input")]
     input: PathBuf,
+    /// Path to save new VIA JSON config. (OPTIONAL)
     #[clap(short = 'o', long = "output")]
     output: Option<PathBuf>,
-
+    /// Rows in one part of keyboard.
     #[clap(short = 'w', long = "width")]
     width: usize,
+    /// Columns in one part of keyboard.
     #[clap(short = 'h', long = "height")]
     height: usize,
-
+    /// Mirror keymap. (OPTIONAL)
     #[clap(short = 'm', long = "mirror")]
     mirror: bool,
-
+    /// Print keymap (OPTIONAL)
     #[clap(short = 'v', long = "verbose")]
     verbose: bool,
-
+    /// Add columns to center. (OPTIONAL)
     #[clap(long = "add_cols_center")]
     add_cols_center: Option<u8>,
+    /// Add columns to sides. (OPTIONAL)
     #[clap(long = "add_cols_sides")]
     add_cols_sides: Option<u8>,
+    /// Add rows to top. (OPTIONAL)
     #[clap(long = "add_rows_top")]
     add_rows_top: Option<u8>,
+    /// Add rows to bottom. (OPTIONAL)
     #[clap(long = "add_rows_bottom")]
     add_rows_bottom: Option<u8>,
-
+    /// Remove columns from center. (OPTIONAL)
     #[clap(long = "rm_cols_center")]
     rm_cols_center: Option<u8>,
+    /// Remove columns from sides. (OPTIONAL)
     #[clap(long = "rm_cols_sides")]
     rm_cols_sides: Option<u8>,
+    /// Remove rows from top. (OPTIONAL)
     #[clap(long = "rm_rows_top")]
     rm_rows_top: Option<u8>,
+    /// Remove rows from bottom. (OPTIONAL)
     #[clap(long = "rm_rows_bottom")]
     rm_rows_bottom: Option<u8>,
 }
@@ -60,6 +70,7 @@ fn main() {
                     print_layer(&left, &right, i);
                 }
             }
+
             if let Some(rows) = args.rm_rows_top {
                 left.change_rows_top(-(rows as i8));
                 right.change_rows_top(-(rows as i8));
@@ -68,6 +79,7 @@ fn main() {
                     print_layer(&left, &right, 0);
                 }
             }
+
             if let Some(rows) = args.rm_rows_bottom {
                 left.change_rows_bottom(-(rows as i8));
                 right.change_rows_bottom(-(rows as i8));
@@ -76,6 +88,7 @@ fn main() {
                     print_layer(&left, &right, 0);
                 }
             }
+
             if let Some(rows) = args.add_rows_top {
                 left.change_rows_top(rows as i8);
                 right.change_rows_top(rows as i8);
@@ -84,6 +97,7 @@ fn main() {
                     print_layer(&left, &right, 0);
                 }
             }
+
             if let Some(rows) = args.add_rows_bottom {
                 left.change_rows_bottom(rows as i8);
                 right.change_rows_bottom(rows as i8);
@@ -101,6 +115,7 @@ fn main() {
                     print_layer(&left, &right, 0);
                 }
             }
+
             if let Some(cols) = args.rm_cols_sides {
                 left.change_cols_sides(-(cols as i8));
                 right.change_cols_sides(-(cols as i8));
@@ -118,6 +133,7 @@ fn main() {
                     print_layer(&left, &right, 0);
                 }
             }
+
             if let Some(cols) = args.add_cols_sides {
                 left.change_cols_sides(cols as i8);
                 right.change_cols_sides(cols as i8);
