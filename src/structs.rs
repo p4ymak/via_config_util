@@ -3,19 +3,20 @@ use std::fmt;
 const KEYSIZE: usize = 5;
 
 #[derive(Debug, Clone)]
-struct Key(String);
-impl Key {
-    pub fn new(k: &str) -> Self {
-        Key(k.to_string())
+struct Key<'a>(&'a str);
+impl<'a> Key<'a> {
+    pub fn new(k: &'a str) -> Self {
+        Key(k) //  Key(k.to_string())
     }
-    pub fn k(&self) -> String {
-        self.0.to_owned()
+    pub fn k(&self) -> &'a str {
+        self.0
     }
-    const NO: Self = Key("KC_NO".to_string());
+    const NO: Self = Key("KC_NO"); //.to_string());
 }
-impl fmt::Display for Key {
+impl<'a> fmt::Display for Key<'a> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let k = match self.0.as_str() {
+        let k = match self.0 {
+            //.as_str() {
             "KC_NO" => " ".repeat(KEYSIZE),
             _ => self
                 .0
@@ -31,7 +32,7 @@ impl fmt::Display for Key {
     }
 }
 
-type Layer = Vec<Vec<Key>>;
+type Layer<'a> = Vec<Vec<Key<'a>>>;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Side {
@@ -48,15 +49,15 @@ impl Side {
 }
 
 #[derive(Debug, Clone)]
-pub struct KeyMatrix {
-    name: String,
+pub struct KeyMatrix<'a> {
+    name: &'a str,
     vendor_id: usize,
-    macros: Vec<String>,
+    macros: Vec<&'a str>,
     side: Side,
-    keymap: Vec<Layer>,
+    keymap: Vec<Layer<'a>>,
 }
 
-impl KeyMatrix {
+impl<'a> KeyMatrix<'a> {
     pub fn width(&self) -> usize {
         self.keymap
             .first()
@@ -84,18 +85,18 @@ impl KeyMatrix {
         if rows >= 0 {
             for layer in self.keymap.iter_mut() {
                 layer.reverse();
-                for _ in 0..(rows as usize) {
+                for _ in 0..rows {
                     layer.push(vec![Key::NO; width]);
                 }
                 layer.reverse();
             }
         } else {
             for layer in self.keymap.iter_mut() {
-                layer.reverse();
-                for _ in 0..(rows as usize) {
-                    layer.pop();
+                for _ in 0..rows.abs() {
+                    if !layer.is_empty() {
+                        layer.remove(0);
+                    }
                 }
-                layer.reverse();
             }
         }
     }
@@ -103,13 +104,13 @@ impl KeyMatrix {
         let width = self.width();
         if rows >= 0 {
             for layer in self.keymap.iter_mut() {
-                for _ in 0..(rows as usize) {
+                for _ in 0..rows {
                     layer.push(vec![Key::NO; width]);
                 }
             }
         } else {
             for layer in self.keymap.iter_mut() {
-                for _ in 0..(rows as usize) {
+                for _ in 0..rows.abs() {
                     layer.pop();
                 }
             }
@@ -169,13 +170,13 @@ impl KeyMatrix {
 
 #[allow(non_snake_case)]
 #[derive(Debug, Serialize, Deserialize)]
-pub struct Config {
-    pub name: String,
+pub struct Config<'a> {
+    pub name: &'a str,
     pub vendorProductId: usize,
-    pub macros: Vec<String>,
-    pub layers: Vec<Vec<String>>,
+    pub macros: Vec<&'a str>,
+    pub layers: Vec<Vec<&'a str>>,
 }
-impl Config {
+impl<'a> Config<'a> {
     pub fn split_map(&self, w: usize, h: usize) -> Option<[KeyMatrix; 2]> {
         if self.layers.iter().any(|l| l.len() != w * h * 2) {
             return None;
@@ -206,14 +207,14 @@ impl Config {
             right_layers.push(right_keymap);
         }
         let left = KeyMatrix {
-            name: self.name.to_owned(),
+            name: self.name,
             vendor_id: self.vendorProductId,
             macros: self.macros.to_owned(),
             side: Side::Left,
             keymap: left_layers,
         };
         let right = KeyMatrix {
-            name: self.name.to_owned(),
+            name: self.name,
             vendor_id: self.vendorProductId,
             macros: self.macros.to_owned(),
             side: Side::Right,
@@ -222,7 +223,7 @@ impl Config {
         Some([left, right])
     }
 
-    pub fn join_maps(left: &KeyMatrix, right: &KeyMatrix) -> Self {
+    pub fn join_maps(left: &KeyMatrix<'a>, right: &KeyMatrix<'a>) -> Self {
         let layers = (0..left.keymap.len())
             .map(|i| {
                 left.keymap
@@ -244,12 +245,12 @@ impl Config {
                             .iter()
                             .map(|key| key.k()),
                     )
-                    .collect::<Vec<String>>()
+                    .collect::<Vec<&'a str>>()
             })
-            .collect::<Vec<Vec<String>>>();
+            .collect::<Vec<Vec<&'a str>>>();
 
         Config {
-            name: left.name.to_owned(),
+            name: left.name,
             vendorProductId: left.vendor_id,
             macros: left.macros.to_owned(),
             layers,

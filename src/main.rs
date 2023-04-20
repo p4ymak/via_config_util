@@ -29,34 +29,36 @@ struct Args {
     verbose: bool,
 
     #[clap(long = "add_cols_center")]
-    add_columns_to_center: Option<u8>,
+    add_cols_center: Option<u8>,
     #[clap(long = "add_cols_sides")]
-    add_columns_to_sides: Option<u8>,
+    add_cols_sides: Option<u8>,
     #[clap(long = "add_rows_top")]
-    add_rows_to_top: Option<u8>,
+    add_rows_top: Option<u8>,
     #[clap(long = "add_rows_bottom")]
-    add_rows_to_bottom: Option<u8>,
+    add_rows_bottom: Option<u8>,
 
     #[clap(long = "rm_cols_center")]
-    rm_columns_from_center: Option<u8>,
+    rm_cols_center: Option<u8>,
     #[clap(long = "rm_cols_sides")]
-    rm_columns_from_sides: Option<u8>,
+    rm_cols_sides: Option<u8>,
     #[clap(long = "rm_rows_top")]
-    rm_rows_from_top: Option<u8>,
+    rm_rows_top: Option<u8>,
     #[clap(long = "rm_rows_bottom")]
-    rm_rows_from_bottom: Option<u8>,
+    rm_rows_bottom: Option<u8>,
 }
 
-fn read_json(path: &PathBuf) -> Result<Config, Box<dyn Error + 'static>> {
-    let content = fs::read_to_string(path)?;
-    let config: Config = serde_json::from_str(&content)?;
-    Ok(config)
-}
+// fn read_json(path: &PathBuf) -> Result<Config, Box<dyn Error + 'static>> {
+//     let content = fs::read_to_string(path)?;
+//     let config: Config = serde_json::from_str(&content)?;
+//     Ok(config)
+// }
 
 fn main() {
     let args = Args::parse();
     let path = &args.input;
-    let config = read_json(path);
+    // let config = read_json(path);
+    let content = fs::read_to_string(path).expect("Can't read file");
+    let config: Result<Config, serde_json::Error> = serde_json::from_str(&content);
     if let Ok(config) = config {
         let parts = config.split_map(args.width, args.height);
         if let Some([mut left, mut right]) = parts {
@@ -65,7 +67,7 @@ fn main() {
                     print_layer(&left, &right, i);
                 }
             }
-            if let Some(rows) = args.rm_rows_from_top {
+            if let Some(rows) = args.rm_rows_top {
                 left.change_rows_top(-(rows as i8));
                 right.change_rows_top(-(rows as i8));
                 if args.verbose {
@@ -73,7 +75,7 @@ fn main() {
                     print_layer(&left, &right, 0);
                 }
             }
-            if let Some(rows) = args.rm_rows_from_bottom {
+            if let Some(rows) = args.rm_rows_bottom {
                 left.change_rows_bottom(-(rows as i8));
                 right.change_rows_bottom(-(rows as i8));
                 if args.verbose {
@@ -81,8 +83,24 @@ fn main() {
                     print_layer(&left, &right, 0);
                 }
             }
+            if let Some(rows) = args.add_rows_top {
+                left.change_rows_top(rows as i8);
+                right.change_rows_top(rows as i8);
+                if args.verbose {
+                    println!("Added {rows} from top:");
+                    print_layer(&left, &right, 0);
+                }
+            }
+            if let Some(rows) = args.add_rows_bottom {
+                left.change_rows_bottom(rows as i8);
+                right.change_rows_bottom(rows as i8);
+                if args.verbose {
+                    println!("Added {rows} from bottom:");
+                    print_layer(&left, &right, 0);
+                }
+            }
 
-            if let Some(cols) = args.rm_columns_from_center {
+            if let Some(cols) = args.rm_cols_center {
                 left.change_cols_center(-(cols as i8));
                 right.change_cols_center(-(cols as i8));
                 if args.verbose {
@@ -90,7 +108,7 @@ fn main() {
                     print_layer(&left, &right, 0);
                 }
             }
-            if let Some(cols) = args.rm_columns_from_sides {
+            if let Some(cols) = args.rm_cols_sides {
                 left.change_cols_sides(-(cols as i8));
                 right.change_cols_sides(-(cols as i8));
                 if args.verbose {
@@ -99,7 +117,7 @@ fn main() {
                 }
             }
 
-            if let Some(cols) = args.add_columns_to_center {
+            if let Some(cols) = args.add_cols_center {
                 left.change_cols_center(cols as i8);
                 right.change_cols_center(cols as i8);
                 if args.verbose {
@@ -107,11 +125,11 @@ fn main() {
                     print_layer(&left, &right, 0);
                 }
             }
-            if let Some(cols) = args.add_columns_to_sides {
+            if let Some(cols) = args.add_cols_sides {
                 left.change_cols_sides(cols as i8);
                 right.change_cols_sides(cols as i8);
                 if args.verbose {
-                    println!("Added {cols} to center:");
+                    println!("Added {cols} to sides:");
                     print_layer(&left, &right, 0);
                 }
             }
@@ -127,7 +145,7 @@ fn main() {
 
             if let Some(output) = args.output {
                 let config = Config::join_maps(&left, &right);
-                let json = serde_json::to_string(&config);
+                let json = serde_json::to_string_pretty(&config);
                 if let Ok(json) = json {
                     match save_json(json, &output) {
                         Ok(path) => println!("New config saved: {}", path),
