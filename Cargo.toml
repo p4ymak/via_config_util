@@ -1,5 +1,5 @@
 [package]
-name = "corne_mirror_via"
+name = "via_config_util"
 version = "0.1.0"
 edition = "2021"
 
