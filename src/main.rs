@@ -47,16 +47,9 @@ struct Args {
     rm_rows_bottom: Option<u8>,
 }
 
-// fn read_json(path: &PathBuf) -> Result<Config, Box<dyn Error + 'static>> {
-//     let content = fs::read_to_string(path)?;
-//     let config: Config = serde_json::from_str(&content)?;
-//     Ok(config)
-// }
-
 fn main() {
     let args = Args::parse();
     let path = &args.input;
-    // let config = read_json(path);
     let content = fs::read_to_string(path).expect("Can't read file");
     let config: Result<Config, serde_json::Error> = serde_json::from_str(&content);
     if let Ok(config) = config {
@@ -71,7 +64,7 @@ fn main() {
                 left.change_rows_top(-(rows as i8));
                 right.change_rows_top(-(rows as i8));
                 if args.verbose {
-                    println!("Removed {rows} from top:");
+                    println!("Removed {rows} row(s) from top:");
                     print_layer(&left, &right, 0);
                 }
             }
@@ -79,7 +72,7 @@ fn main() {
                 left.change_rows_bottom(-(rows as i8));
                 right.change_rows_bottom(-(rows as i8));
                 if args.verbose {
-                    println!("Removed {rows} from bottom:");
+                    println!("Removed {rows} row(s) from bottom:");
                     print_layer(&left, &right, 0);
                 }
             }
@@ -87,7 +80,7 @@ fn main() {
                 left.change_rows_top(rows as i8);
                 right.change_rows_top(rows as i8);
                 if args.verbose {
-                    println!("Added {rows} from top:");
+                    println!("Added {rows} row(s) to top:");
                     print_layer(&left, &right, 0);
                 }
             }
@@ -95,7 +88,7 @@ fn main() {
                 left.change_rows_bottom(rows as i8);
                 right.change_rows_bottom(rows as i8);
                 if args.verbose {
-                    println!("Added {rows} from bottom:");
+                    println!("Added {rows} row(s) to bottom:");
                     print_layer(&left, &right, 0);
                 }
             }
@@ -104,7 +97,7 @@ fn main() {
                 left.change_cols_center(-(cols as i8));
                 right.change_cols_center(-(cols as i8));
                 if args.verbose {
-                    println!("Removed {cols} from center:");
+                    println!("Removed {cols} columns(s) from center:");
                     print_layer(&left, &right, 0);
                 }
             }
@@ -112,7 +105,7 @@ fn main() {
                 left.change_cols_sides(-(cols as i8));
                 right.change_cols_sides(-(cols as i8));
                 if args.verbose {
-                    println!("Removed {cols} from sides:");
+                    println!("Removed {cols} column(s) from sides:");
                     print_layer(&left, &right, 0);
                 }
             }
@@ -121,7 +114,7 @@ fn main() {
                 left.change_cols_center(cols as i8);
                 right.change_cols_center(cols as i8);
                 if args.verbose {
-                    println!("Added {cols} to center:");
+                    println!("Added {cols} column(s) to center:");
                     print_layer(&left, &right, 0);
                 }
             }
@@ -129,14 +122,15 @@ fn main() {
                 left.change_cols_sides(cols as i8);
                 right.change_cols_sides(cols as i8);
                 if args.verbose {
-                    println!("Added {cols} to sides:");
+                    println!("Added {cols} column(s) to sides:");
                     print_layer(&left, &right, 0);
                 }
             }
 
             if args.mirror {
+                let left_ori = left.clone();
                 left = right.to_mirrored();
-                right = left.to_mirrored();
+                right = left_ori.to_mirrored();
                 if args.verbose {
                     println!("\nMirrored Layout:");
                     print_layer(&left, &right, 0);
